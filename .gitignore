@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+dist/
+build/
+*.spec
+*.log
+models/**/*.pth
+models/**/*.bin
+models/**/*.safetensors
+*.mp4
+*.wav
+*.mp3
+!assets/**
