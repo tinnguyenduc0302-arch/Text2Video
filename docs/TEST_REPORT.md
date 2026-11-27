@@ -14,6 +14,7 @@ Môi trường: Windows 11, Python 3.12.10, PyTorch 2.15 CPU, FFmpeg/FFprobe 9.1
 - Cả hai checkpoint TorchScript đã nạp; checkpoint thường chạy forward với tensor mẫu. SHA-256 của ba model được đối chiếu trong mã/script tải.
 - Điều chỉnh bố cục: GAN với zoom 140%, dịch lên 30 ở khung dọc 720×1280 và zoom 80%, dịch xuống 25 ở khung ngang 1280×720 đều xuất video hợp lệ. Đã xem frame đầu của mẫu dọc, thấy ảnh nhân vật dịch lên với nền mờ; chưa đánh giá toàn bộ video.
 - GUI test kiểm tra giá trị zoom/vị trí độc lập theo tỷ lệ ngang và dọc, reset về 100%/giữa.
+- Bản onedir `dist/VoicetoVideo/VoicetoVideo.exe` build trên Windows 11 và khởi chạy được. Đã quan sát cửa sổ thật qua Windows UI Automation; giao diện hiển thị các thanh zoom/vị trí và nút tạo bị khóa khi chưa đủ dữ liệu. Shortcut Desktop/Start Menu đã trỏ đúng file chạy. Chưa chạy render bằng thao tác chuột từ bản exe.
 
 ## Lỗi đã sửa
 
@@ -30,4 +31,4 @@ Môi trường: Windows 11, Python 3.12.10, PyTorch 2.15 CPU, FFmpeg/FFprobe 9.1
 - Khẩu hình bằng mắt, audio bằng tai, chất lượng phụ đề và vùng an toàn trên điện thoại.
 - Hủy giữa lúc suy luận và FFmpeg, lỗi hết dung lượng/thiếu quyền, reset GUI sau hộp thoại thành công trên màn hình thật.
 - Intel Arc/OpenVINO/NPU; bản hiện tại dùng CPU.
-- Bản portable trên máy khác, shortcut, bộ cài/gỡ cài đặt.
+- Bản portable trên máy khác, bộ cài/gỡ cài đặt và render từ GUI bản exe.

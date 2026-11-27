@@ -10,7 +10,7 @@ Yêu cầu Windows 11, Python 3.12, FFmpeg và FFprobe. Chạy `scripts/setup.ps
 
 Checkpoint Wav2Lip được lấy từ [repository chính thức](https://github.com/Rudrabha/Wav2Lip) và được xác minh SHA-256 trước khi sử dụng. Không dùng `Weights/demo.pth` trong repo gốc vì file chỉ có 2 byte. Checkpoint hiện là TorchScript, nên loader dùng `torch.jit.load` thay vì loader cũ trong `lipsync`.
 
-`scripts/build.ps1` tạo bản onedir tại `dist/VoicetoVideo/VoicetoVideo.exe`. Đặt thư mục `models/wav2lip` cạnh file exe. Bản build không bao gồm checkpoint và chưa được thử trên máy khác. Để gỡ bản nguồn, xóa thư mục dự án sau khi sao lưu video cá nhân đã xuất; bản hiện tại chưa có trình gỡ cài đặt.
+`scripts/build.ps1` tạo bản onedir tại `dist/VoicetoVideo/VoicetoVideo.exe`. Đặt thư mục `models/wav2lip` cạnh file exe. Bản build mặc định không bao gồm checkpoint; trên máy phát triển này model đã được sao chép riêng vào bản portable và shortcut Desktop/Start Menu đã tạo. Chưa thử trên máy khác. Để gỡ bản nguồn, xóa thư mục dự án sau khi sao lưu video cá nhân đã xuất; bản hiện tại chưa có trình gỡ cài đặt.
 
 ## Giới hạn hiện tại
 
