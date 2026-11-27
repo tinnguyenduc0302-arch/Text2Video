@@ -44,6 +44,7 @@ class RenderRequest:
     subtitles: bool = False
     zoom: int = 100
     vertical: int = 0
+    horizontal: int = 0
 
 def output_path(folder):
     stem = "VoicetoVideo_" + datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -71,7 +72,7 @@ def render(req, report=lambda step, value: None, cancel=None):
         raise ValueError("Chế độ không hợp lệ.")
     if req.mode == 3:
         assert_subtitles(req.srt, audio_length)
-    if not 50 <= req.zoom <= 200 or not -100 <= req.vertical <= 100:
+    if not 50 <= req.zoom <= 200 or not -100 <= req.vertical <= 100 or not -100 <= req.horizontal <= 100:
         raise ValueError("Vị trí hoặc mức zoom không hợp lệ.")
     with tempfile.TemporaryDirectory(prefix="VoicetoVideo-") as temp_name:
         temp = Path(temp_name)
@@ -105,12 +106,13 @@ def render(req, report=lambda step, value: None, cancel=None):
         staging = temp / "output.mp4"
         zoom = req.zoom / 100
         offset = round(req.vertical * height * 0.003)
+        horizontal_offset = round(req.horizontal * width * 0.003)
         foreground_width = round(width * zoom / 2) * 2
         foreground_height = round(height * zoom / 2) * 2
         filtergraph = (f"[0:v]split=2[bg][fg];"
                        f"[bg]scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},boxblur=20:1[back];"
                        f"[fg]scale={foreground_width}:{foreground_height}:force_original_aspect_ratio=decrease[front];"
-                       f"[back][front]overlay=(W-w)/2:(H-h)/2+{offset},setsar=1,fps=25")
+                       f"[back][front]overlay=(W-w)/2+{horizontal_offset}:(H-h)/2+{offset},setsar=1,fps=25")
         if subtitle:
             # FFmpeg's subtitles filter parses paths; copy to task-local ASCII path first.
             local_srt = temp / "subtitles.srt"

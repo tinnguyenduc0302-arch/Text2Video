@@ -2,6 +2,8 @@ import multiprocessing as mp
 import queue
 import time
 import hashlib
+import os
+import sys
 from app.config.defaults import MODEL_FILES
 
 EXPECTED_SHA256 = {
@@ -20,11 +22,25 @@ def checkpoint(kind):
     return path
 
 def _sync_child(face, audio, output, kind, messages):
+    # PyInstaller --windowed leaves stdout/stderr as None. tqdm in lipsync writes
+    # to stderr, which otherwise raises AttributeError: NoneType.write.
+    original_stdout, original_stderr = sys.stdout, sys.stderr
+    streams = []
+    if sys.stdout is None:
+        sys.stdout = open(os.devnull, "w", encoding="utf-8")
+        streams.append(sys.stdout)
+    if sys.stderr is None:
+        sys.stderr = open(os.devnull, "w", encoding="utf-8")
+        streams.append(sys.stderr)
     try:
         _sync_impl(face, audio, output, kind)
         messages.put(None)
     except Exception as exc:
         messages.put(f"{type(exc).__name__}: {exc}")
+    finally:
+        sys.stdout, sys.stderr = original_stdout, original_stderr
+        for stream in streams:
+            stream.close()
 
 def sync(face, audio, output, kind, cancel=None):
     messages = mp.Queue()

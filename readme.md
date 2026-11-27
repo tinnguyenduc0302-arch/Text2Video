@@ -2,7 +2,7 @@
 
 Ứng dụng Windows tạo video nhân vật nói từ văn bản hoặc giọng ghi âm. Giao diện tiếng Việt, ba chế độ đầu vào, hai checkpoint Wav2Lip, phụ đề tùy chọn. Ba chế độ đã chạy thử với clip ngắn trên Windows 11; bản này vẫn cần kiểm thử video dài, chất lượng khẩu hình và bản portable trên máy khác.
 
-Trong **Thiết lập video**, chọn khung ngang hoặc dọc rồi dùng hai thanh **Phóng to / thu nhỏ** và **Vị trí nhân vật**. Mỗi tỷ lệ khung hình ghi nhớ bố cục riêng trong tác vụ hiện tại. Khung xem trước cập nhật theo thanh trượt; video xuất dùng nền mờ để lấp vùng trống khi thu nhỏ hoặc dịch ảnh.
+Trong **Thiết lập video**, chọn khung ngang hoặc dọc rồi điều chỉnh **Phóng to / thu nhỏ**, **Lên / xuống** và **Trái / phải** bằng thanh trượt hoặc ô nhập số. Mỗi tỷ lệ khung hình ghi nhớ bố cục riêng trong tác vụ hiện tại. Khung xem trước cập nhật tức thì; video xuất dùng nền mờ để lấp vùng trống khi thu nhỏ hoặc dịch ảnh. Dữ liệu đầu vào nằm bên phải khung xem trước; Thiết lập video và Xuất video nằm trong hai cột phía dưới.
 
 ## Cài và chạy
 

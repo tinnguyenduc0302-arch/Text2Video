@@ -15,6 +15,9 @@ Môi trường: Windows 11, Python 3.12.10, PyTorch 2.15 CPU, FFmpeg/FFprobe 9.1
 - Điều chỉnh bố cục: GAN với zoom 140%, dịch lên 30 ở khung dọc 720×1280 và zoom 80%, dịch xuống 25 ở khung ngang 1280×720 đều xuất video hợp lệ. Đã xem frame đầu của mẫu dọc, thấy ảnh nhân vật dịch lên với nền mờ; chưa đánh giá toàn bộ video.
 - GUI test kiểm tra giá trị zoom/vị trí độc lập theo tỷ lệ ngang và dọc, reset về 100%/giữa.
 - Bản onedir `dist/VoicetoVideo/VoicetoVideo.exe` build trên Windows 11 và khởi chạy được. Đã quan sát cửa sổ thật qua Windows UI Automation; giao diện hiển thị các thanh zoom/vị trí và nút tạo bị khóa khi chưa đủ dữ liệu. Shortcut Desktop/Start Menu đã trỏ đúng file chạy. Chưa chạy render bằng thao tác chuột từ bản exe.
+- Sửa lỗi `AttributeError: 'NoneType' object has no attribute 'write'` khi bản GUI không có `stdout/stderr`; tiến trình AI nay cấp luồng ghi hợp lệ. Có test tái hiện trường hợp `stdout/stderr=None`.
+- Bố cục hai cột và các ô nhập số đã khởi tạo và quan sát trong cửa sổ Windows. Test kiểm tra đồng bộ slider/ô số và giá trị riêng theo khung ngang/dọc.
+- Mẫu 1,5 giây khung dọc 720×1280 với zoom 120%, dịch lên 20 và sang phải 40 đã xuất, qua FFprobe.
 
 ## Lỗi đã sửa
 
