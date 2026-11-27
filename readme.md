@@ -1,48 +1,19 @@
-# **Text-to-LipSync: Convert Text to Speech and Sync with Lip Movements**
+# VoicetoVideo v1.0.0 (đang phát triển)
 
-This project **converts text to Vietnamese speech using Microsoft Edge-TTS**, then **syncs the generated speech with a static image or video** using the Wav2Lip model. The result is a **realistic talking face video**.
+Ứng dụng Windows tạo video nhân vật nói từ văn bản hoặc giọng ghi âm. Giao diện tiếng Việt, ba chế độ đầu vào, hai checkpoint Wav2Lip, phụ đề tùy chọn. Ba chế độ đã chạy thử với clip ngắn trên Windows 11; bản này vẫn cần kiểm thử video dài, chất lượng khẩu hình và bản portable trên máy khác.
 
----
+## Cài và chạy
 
-## **🛠 Features**
-- Convert **text to speech (TTS)** using **Microsoft Edge-TTS**.
-- Convert **MP3 to WAV** using **Librosa** for further processing.
-- Generate **lip-synced videos** with **Wav2Lip**.
-- Supports **CPU and CUDA (GPU acceleration)** for fast processing.
-- **Automatic file conversion** and caching for efficiency.
+Yêu cầu Windows 11, Python 3.12, FFmpeg và FFprobe. Chạy `scripts/setup.ps1`, rồi `scripts/download_models.ps1` để lấy ba model Wav2Lip, GAN, S3FD và cache faster-whisper small. Sau đó chạy `scripts/start.ps1`. Chế độ văn bản dùng Edge-TTS và cần Internet. Chế độ ghi âm và SRT chạy offline sau khi đã cài models.
 
----
+Checkpoint Wav2Lip được lấy từ [repository chính thức](https://github.com/Rudrabha/Wav2Lip) và được xác minh SHA-256 trước khi sử dụng. Không dùng `Weights/demo.pth` trong repo gốc vì file chỉ có 2 byte. Checkpoint hiện là TorchScript, nên loader dùng `torch.jit.load` thay vì loader cũ trong `lipsync`.
 
-## **📦 Installation**
-### **1️⃣ Clone the Repository**
+`scripts/build.ps1` tạo bản onedir tại `dist/VoicetoVideo/VoicetoVideo.exe`. Đặt thư mục `models/wav2lip` cạnh file exe. Bản build không bao gồm checkpoint và chưa được thử trên máy khác. Để gỡ bản nguồn, xóa thư mục dự án sau khi sao lưu video cá nhân đã xuất; bản hiện tại chưa có trình gỡ cài đặt.
 
-git clone https://github.com/your-username/Text-to-LipSync.git
-cd Text-to-LipSync
+## Giới hạn hiện tại
 
-2️⃣ Install Dependencies
-Ensure you have Python 3.8+ installed, then install required libraries:
-
-pip install edge-tts nest_asyncio pydub librosa soundfile lipsync
-
-3️⃣ Install FFmpeg (If Not Installed)
-FFmpeg is required for processing audio/video.
-
-4️⃣ Download Pretrained Wav2Lip Model
-Download the Wav2Lip GAN model weights and place it in the project folder Weights
-
-
-## Pre-Trained Weights
-
-`lipsync` works with two different pre-trained models:
-
-### Wav2Lip  
-[📥 Download wav2lip.pth](https://drive.google.com/file/d/1qKU8HG8dR4nW4LvCqpEYmSy6LLpVkZ21/view?usp=sharing)
-
-- More accurate lip synchronization  
-- Lips in the result may appear somewhat blurred  
-
-### Wav2Lip + GAN  
-[📥 Download wav2lip_gan.pth](https://drive.google.com/file/d/13Ktexq-nZOsAxqrTdMh3Q0ntPB3yiBtv/view?usp=sharing)
-
-- Lips in the result are clearer  
-- Synchronization may be slightly less accurate  
+- CPU là backend được cấu hình; Intel GPU/NPU chưa được benchmark.
+- `lipsync` 0.1.0 ràng buộc PyAV <15; trên Python 3.12 bản đó cần biên dịch và thiếu Build Tools, nên dùng PyAV 17 wheel. Import và các clip ngắn đã chạy, nhưng `pip check` còn báo xung đột version.
+- `lipsync` nạp toàn bộ frame video vào RAM; video dài 1–5 phút chưa được thử và có thể tốn nhiều bộ nhớ.
+- Chất lượng khẩu hình và các điểm nối video lặp chưa được người kiểm tra bằng mắt/nghe đánh giá.
+- Không sử dụng thương mại khi chưa có quyền phù hợp đối với checkpoint và mã bên thứ ba. Xem [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
