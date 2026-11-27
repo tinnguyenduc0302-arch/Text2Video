@@ -12,6 +12,8 @@ Môi trường: Windows 11, Python 3.12.10, PyTorch 2.15 CPU, FFmpeg/FFprobe 9.1
 - Mode 1: Edge-TTS tiếng Việt + ảnh, GAN, 720p: video 4,08 giây, H.264/AAC, khoảng 19 giây xử lý.
 - Mode 2: MP3 + ảnh, GAN, 720p, phụ đề tự động faster-whisper small local: video 4,10 giây, khoảng 41 giây xử lý. Whisper nhận dạng được câu tiếng Việt trong mẫu.
 - Cả hai checkpoint TorchScript đã nạp; checkpoint thường chạy forward với tensor mẫu. SHA-256 của ba model được đối chiếu trong mã/script tải.
+- Điều chỉnh bố cục: GAN với zoom 140%, dịch lên 30 ở khung dọc 720×1280 và zoom 80%, dịch xuống 25 ở khung ngang 1280×720 đều xuất video hợp lệ. Đã xem frame đầu của mẫu dọc, thấy ảnh nhân vật dịch lên với nền mờ; chưa đánh giá toàn bộ video.
+- GUI test kiểm tra giá trị zoom/vị trí độc lập theo tỷ lệ ngang và dọc, reset về 100%/giữa.
 
 ## Lỗi đã sửa
 

@@ -2,6 +2,8 @@
 
 Ứng dụng Windows tạo video nhân vật nói từ văn bản hoặc giọng ghi âm. Giao diện tiếng Việt, ba chế độ đầu vào, hai checkpoint Wav2Lip, phụ đề tùy chọn. Ba chế độ đã chạy thử với clip ngắn trên Windows 11; bản này vẫn cần kiểm thử video dài, chất lượng khẩu hình và bản portable trên máy khác.
 
+Trong **Thiết lập video**, chọn khung ngang hoặc dọc rồi dùng hai thanh **Phóng to / thu nhỏ** và **Vị trí nhân vật**. Mỗi tỷ lệ khung hình ghi nhớ bố cục riêng trong tác vụ hiện tại. Khung xem trước cập nhật theo thanh trượt; video xuất dùng nền mờ để lấp vùng trống khi thu nhỏ hoặc dịch ảnh.
+
 ## Cài và chạy
 
 Yêu cầu Windows 11, Python 3.12, FFmpeg và FFprobe. Chạy `scripts/setup.ps1`, rồi `scripts/download_models.ps1` để lấy ba model Wav2Lip, GAN, S3FD và cache faster-whisper small. Sau đó chạy `scripts/start.ps1`. Chế độ văn bản dùng Edge-TTS và cần Internet. Chế độ ghi âm và SRT chạy offline sau khi đã cài models.

@@ -42,6 +42,8 @@ class RenderRequest:
     quality: str = "1080p"
     aspect: str = "16:9"
     subtitles: bool = False
+    zoom: int = 100
+    vertical: int = 0
 
 def output_path(folder):
     stem = "VoicetoVideo_" + datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -69,6 +71,8 @@ def render(req, report=lambda step, value: None, cancel=None):
         raise ValueError("Chế độ không hợp lệ.")
     if req.mode == 3:
         assert_subtitles(req.srt, audio_length)
+    if not 50 <= req.zoom <= 200 or not -100 <= req.vertical <= 100:
+        raise ValueError("Vị trí hoặc mức zoom không hợp lệ.")
     with tempfile.TemporaryDirectory(prefix="VoicetoVideo-") as temp_name:
         temp = Path(temp_name)
         if req.mode == 1:
@@ -99,13 +103,21 @@ def render(req, report=lambda step, value: None, cancel=None):
         width, height = SIZES[(req.quality, req.aspect)]
         target = output_path(folder)
         staging = temp / "output.mp4"
-        filters = [f"scale={width}:{height}:force_original_aspect_ratio=decrease", f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2", "setsar=1", "fps=25"]
+        zoom = req.zoom / 100
+        offset = round(req.vertical * height * 0.003)
+        foreground_width = round(width * zoom / 2) * 2
+        foreground_height = round(height * zoom / 2) * 2
+        filtergraph = (f"[0:v]split=2[bg][fg];"
+                       f"[bg]scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},boxblur=20:1[back];"
+                       f"[fg]scale={foreground_width}:{foreground_height}:force_original_aspect_ratio=decrease[front];"
+                       f"[back][front]overlay=(W-w)/2:(H-h)/2+{offset},setsar=1,fps=25")
         if subtitle:
             # FFmpeg's subtitles filter parses paths; copy to task-local ASCII path first.
             local_srt = temp / "subtitles.srt"
             local_srt.write_bytes(subtitle.read_bytes())
-            filters.append("subtitles=subtitles.srt:force_style='FontName=Arial,FontSize=22,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,Outline=2,Alignment=2,MarginV=48'")
-        ffargs = ["-i", raw, "-i", audio_source, "-map", "0:v:0", "-map", "1:a:0", "-vf", ",".join(filters), "-t", str(audio_length), "-r", "25", "-fps_mode", "cfr", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", staging]
+            filtergraph += ",subtitles=subtitles.srt:force_style='FontName=Arial,FontSize=22,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,Outline=2,Alignment=2,MarginV=48'"
+        filtergraph += "[outv]"
+        ffargs = ["-i", raw, "-i", audio_source, "-filter_complex", filtergraph, "-map", "[outv]", "-map", "1:a:0", "-t", str(audio_length), "-r", "25", "-fps_mode", "cfr", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", staging]
         run_ffmpeg(ffargs, cancel, cwd=temp)
         report("Đang kiểm tra video đầu ra", 95)
         info = validate_output(staging, (width, height), audio_length)

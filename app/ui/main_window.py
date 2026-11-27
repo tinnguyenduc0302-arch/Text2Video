@@ -1,12 +1,13 @@
 import threading
 import time
+import tempfile
 from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal, Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QPainter, QColor
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QComboBox, QFileDialog,
     QFormLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox,
-    QProgressBar, QPushButton, QRadioButton, QScrollArea, QTextEdit, QVBoxLayout, QWidget)
+    QProgressBar, QPushButton, QRadioButton, QScrollArea, QSlider, QTextEdit, QVBoxLayout, QWidget)
 
 from app.config.defaults import VOICES
 from app.core.pipeline import RenderRequest, render
@@ -39,6 +40,9 @@ class MainWindow(QMainWindow):
         self.resize(900, 780)
         self.worker = None
         self.lockables = []
+        self.source_pixmap = None
+        self.frame_settings = {0: (100, 0), 1: (100, 0)}
+        self._aspect_index = 0
         self.started = None
         self.setStyleSheet("QMainWindow{background:#f5f8fa} QGroupBox{background:white;border:1px solid #dce5e9;border-radius:10px;margin-top:12px;padding:14px;font-weight:600} QGroupBox::title{subcontrol-origin:margin;left:18px;padding:0 4px;color:#12475b} QPushButton{background:#087c91;color:white;border:0;border-radius:6px;padding:8px 13px} QPushButton:disabled{background:#b8c5ca} QLineEdit,QTextEdit,QComboBox{border:1px solid #cbd9df;border-radius:5px;padding:6px;background:white}")
         root = QWidget()
@@ -106,6 +110,31 @@ class MainWindow(QMainWindow):
         self.aspect.addItems(["▭  Khung ngang 16:9 (YouTube video dài)", "▯  Khung dọc 9:16 (TikTok, Facebook Reels, Instagram Reels, YouTube Shorts)"])
         self.aspect.currentIndexChanged.connect(self.update_preview_shape)
         sform.addRow("Khung hình", self.aspect)
+        self.zoom = QSlider(Qt.Horizontal)
+        self.zoom.setRange(50, 200)
+        self.zoom.setValue(100)
+        self.zoom_value = QLabel("100%")
+        zoom_row = QWidget()
+        zoom_layout = QHBoxLayout(zoom_row)
+        zoom_layout.setContentsMargins(0, 0, 0, 0)
+        zoom_layout.addWidget(self.zoom)
+        zoom_layout.addWidget(self.zoom_value)
+        sform.addRow("Phóng to / thu nhỏ", zoom_row)
+        self.vertical = QSlider(Qt.Horizontal)
+        self.vertical.setRange(-100, 100)
+        self.vertical.setValue(0)
+        self.vertical_value = QLabel("Giữa")
+        vertical_row = QWidget()
+        vertical_layout = QHBoxLayout(vertical_row)
+        vertical_layout.setContentsMargins(0, 0, 0, 0)
+        vertical_layout.addWidget(QLabel("Lên"))
+        vertical_layout.addWidget(self.vertical)
+        vertical_layout.addWidget(QLabel("Xuống"))
+        vertical_layout.addWidget(self.vertical_value)
+        sform.addRow("Vị trí nhân vật", vertical_row)
+        self.lockables.extend((self.zoom, self.vertical))
+        self.zoom.valueChanged.connect(self.update_composition)
+        self.vertical.valueChanged.connect(self.update_composition)
         self.subtitles = QCheckBox("Ghép phụ đề vào video")
         self.lockables.append(self.subtitles)
         sform.addRow(self.subtitles)
@@ -173,17 +202,53 @@ class MainWindow(QMainWindow):
 
     def refresh_preview(self):
         path = Path(self.face.text())
-        if path.suffix.lower() in IMAGE and path.exists():
+        if not path.exists():
+            return
+        if path.suffix.lower() in IMAGE:
             image = QPixmap(str(path))
-            if image.isNull():
-                self.preview.setText("Không đọc được ảnh")
-            else:
-                self.preview.setPixmap(image.scaled(self.preview.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        elif path.exists():
-            self.preview.setText(f"Video: {path.name}")
+        else:
+            from app.core.media import run_ffmpeg
+            with tempfile.TemporaryDirectory(prefix="VoicetoVideo-preview-") as folder:
+                frame = Path(folder) / "preview.jpg"
+                try:
+                    run_ffmpeg(["-i", path.resolve(), "-frames:v", "1", frame])
+                    image = QPixmap(str(frame))
+                except Exception:
+                    image = QPixmap()
+        self.source_pixmap = image if not image.isNull() else None
+        self.update_composition()
 
     def update_preview_shape(self):
-        self.preview.setMaximumWidth(250 if self.aspect.currentIndex() else 500)
+        if hasattr(self, "zoom"):
+            self.frame_settings[self._aspect_index] = (self.zoom.value(), self.vertical.value())
+            self._aspect_index = self.aspect.currentIndex()
+            zoom, vertical = self.frame_settings[self._aspect_index]
+            self.zoom.setValue(zoom)
+            self.vertical.setValue(vertical)
+        self.preview.setFixedSize(240, 427) if self.aspect.currentIndex() else self.preview.setFixedSize(480, 270)
+        self.update_composition()
+
+    def update_composition(self):
+        if not hasattr(self, "zoom"):
+            return
+        self.zoom_value.setText(f"{self.zoom.value()}%")
+        self.vertical_value.setText("Giữa" if self.vertical.value() == 0 else f"{self.vertical.value():+d}")
+        if not self.source_pixmap:
+            self.preview.setText("Chưa chọn nhân vật")
+            return
+        width, height = self.preview.width(), self.preview.height()
+        canvas = QPixmap(width, height)
+        canvas.fill(QColor("#eaf1f4"))
+        painter = QPainter(canvas)
+        background = self.source_pixmap.scaled(width, height, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+        painter.setOpacity(0.35)
+        painter.drawPixmap((width-background.width())//2, (height-background.height())//2, background)
+        painter.setOpacity(1.0)
+        foreground = self.source_pixmap.scaled(round(width*self.zoom.value()/100), round(height*self.zoom.value()/100), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        y = (height-foreground.height())//2 + round(self.vertical.value()*height*0.003)
+        painter.drawPixmap((width-foreground.width())//2, y, foreground)
+        painter.end()
+        self.preview.setPixmap(canvas)
 
     def update_mode(self):
         mode = self.mode_group.checkedId()
@@ -216,7 +281,7 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             QMessageBox.warning(self, "Dữ liệu không hợp lệ", str(exc))
             return
-        request = RenderRequest(self.mode_group.checkedId(), self.face.text(), self.folder.text(), self.text.toPlainText(), self.voice.currentData(), self.audio.text(), self.srt.text(), self.model.currentData(), "1080p" if self.quality.currentIndex() == 0 else "720p", "16:9" if self.aspect.currentIndex() == 0 else "9:16", self.subtitles.isChecked())
+        request = RenderRequest(self.mode_group.checkedId(), self.face.text(), self.folder.text(), self.text.toPlainText(), self.voice.currentData(), self.audio.text(), self.srt.text(), self.model.currentData(), "1080p" if self.quality.currentIndex() == 0 else "720p", "16:9" if self.aspect.currentIndex() == 0 else "9:16", self.subtitles.isChecked(), self.zoom.value(), self.vertical.value())
         self.worker = RenderWorker(request)
         self.worker.progress.connect(self.on_progress)
         self.worker.succeeded.connect(self.on_success)
@@ -272,6 +337,10 @@ class MainWindow(QMainWindow):
             field.clear()
         self.text.clear()
         self.preview.clear()
+        self.source_pixmap = None
+        self.frame_settings = {0: (100, 0), 1: (100, 0)}
+        self.zoom.setValue(100)
+        self.vertical.setValue(0)
         self.preview.setText("Chưa chọn nhân vật")
         self.voice.setCurrentIndex(0)
         self.model.setCurrentIndex(0)
